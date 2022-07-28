@@ -19,6 +19,8 @@ def count_occurrences(diction, word_length):
 
 	count = {}
 
+	# Changing something to test git
+
 	for i in range(word_length):
 		count[i] = {}
 		for word in diction:
