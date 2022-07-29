@@ -4,25 +4,26 @@ __email__ = "<your e-mail>"
 
 # first start with a good word - most used letters in alphabet
 # Go a step further and go with most common letters in that row
+# if -1 get rid of any word with that letter in that index, get rid of any word where the letter is not present anywhere
+# Add 500 to every other hueristic that is not currently 0
+# if 0, remove every word with that letter at that index
+# if 1, remove any words that do not have that letter at that index and make letter value 1000
+
 import helper
 from collections import Counter
 
 
-def count_occurrences(diction, word_length):
+def determine_heuristic(diction, word_length, count):
 	"""
 	A method that counts the occurrences of letters at an index and
 	returns that information
 	:param diction: The current list of words/precepts
 	:param word_length: the length of the word
+	:param count: the previous count
 	:return: the next word
 	"""
 
-	count = {}
-
-	# Changing something to test git
-
 	for i in range(word_length):
-		count[i] = {}
 		for word in diction:
 			if word[i] not in count[i]:
 				count[i][word[i]] = 1
@@ -34,11 +35,18 @@ def count_occurrences(diction, word_length):
 
 
 def revise_dict(diction, letter_indices, letter_states):
+	"""
+	Method that removes any impossible words from the dictionary
+	:param diction: The current Dictionary
+	:param letter_indices:
+	:param letter_states:
+	:return: The revised dictionary
+	"""
 	letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
                'V', 'W', 'X', 'Y', 'Z']
 	last_word = helper.letter_indices_to_word(letter_indices, letters)
 	count = Counter(last_word)
-	# print(count)
+	print("1" + str(count))
 	print(last_word)
 	print("letter_states: " + str(letter_states))
 
@@ -48,7 +56,8 @@ def revise_dict(diction, letter_indices, letter_states):
 
 	invalid_letters = ""
 	for i in range(len(letter_states)):
-		if letter_states[i] == 0 and count[letters[letter_indices[i]]] > 1:
+		print("count: " + str(count[last_word[i]]))
+		if letter_states[i] == 0 and count[last_word[i]] == 1:
 			if letters[letter_indices[i]] not in invalid_letters:  # if it is not an already found wrong letter
 				invalid_letters += letters[letter_indices[i]]
 				print("invalid_letter: " + invalid_letters)
@@ -64,7 +73,13 @@ def revise_dict(diction, letter_indices, letter_states):
 	for word in wrong_word_list:
 		print("word being removed: " + word)
 		diction.remove(word)
+
+	print(diction)
 	return diction
+
+
+def choose_word(diction, heuristic):
+	return 0
 
 
 class WordleAgent():
@@ -136,12 +151,16 @@ class WordleAgent():
 
 		# print(letter_indexes)
 
-		occurrences = count_occurrences(self.dictionary, self.word_length)
-
 		if guess_counter == 0:
-			next_guess = self.dictionary[1]
+			count = {}
+			for i in range(self.word_length):
+				count[i] = {}
+			heuristic = determine_heuristic(self.dictionary, self.word_length, count)
+			word_index = choose_word(self.dictionary, heuristic)
+			next_guess = self.dictionary[word_index]
 		else:
 			self.dictionary = revise_dict(self.dictionary, letter_indexes, letter_states)
+
 			next_guess = self.dictionary[0]
 
 		# Currently this agent always returns the first word from the dictionary-probably
