@@ -13,9 +13,14 @@ import helper
 from collections import Counter
 
 
+def sort_func(e):
+	if e[1] == 1:
+		return 1
+	if e[1] == -1:
+		return 0
+	return 2
 
-
-def determine_initial_heuristic(diction, word_length):
+def determine_heuristic(diction, word_length):
 	"""
 	A method that counts the occurrences of letters at an index and
 	returns that information
@@ -34,7 +39,7 @@ def determine_initial_heuristic(diction, word_length):
 			else:
 				count[i][word[i]] += 1
 
-	print(count[0])
+	# print(count[0])
 	return count
 
 
@@ -49,75 +54,64 @@ def revise_dict(diction, letter_indices, letter_states, heuristic, letters):
 	:return: The revised dictionary
 	"""
 
-
-	# print(letters)
-	# print(last_word)
-	# print("letter_states: " + str(letter_states))
-
-	# Can probably take this out - see difference in time
-
-	# Create a dictionary of the letters and their states
 	last_word = helper.letter_indices_to_word(letter_indices, letters)
 
+	# Create a dictionary holding the states and indexes for each letter
 	states = {}
 	for i in range(len(last_word)):
 		if last_word[i] not in states:
-			states[last_word[i]] = []
-		states[last_word[i]].append(letter_states[i])
-	print("states: " + str(states))
-	"""
-	if last_word in diction:
-		print("last_word: " + last_word)
-		diction.remove(last_word)
-		"""
+			states[last_word[i]] = list()
+		one_letter = [i, letter_states[i]]
+		states[last_word[i]].append(one_letter)
+
+	# A dictionary that holds a list that holds a dictionary
+	# {'S': [[index, state][index, state]], 'O':[[index, state]...
+
+	# Sort so -1 first then 1 then zero for each letter.
+	for i in states:
+		states.get(i).sort(key=sort_func)
+
 	wrong_word_list = set()
 
+	# if its a -1 add one to amount of 1's
+	# so do -1 case first then 1 then zero
+	# if -1 add one to 1 count and remove words with less than that amount of letters
+	# if one, add to 1 count and remove words without letter there and less than count amount
+	# if zero remove all in the position and any letter that has more than count
 
- # create dict with letters from last word as keys, then add states to all the letters
-
-    # if any of the states have the same letter associated to them - count that amount and make sure there are that many
-	"""
 	for word in diction:
-		word_count = Counter(word)
-		# print(word_count)
-		for i in range(len(word)):
-			if i in states[0]:
-				if letters[letter_indices[i]] == word[i]:
-					wrong_word_list.add(word)
-			if i in states[1]:
-				if letters[letter_indices[i]] != word[i]:
-					wrong_word_list.add(word)
-			if i in states[-1]:
-				if letters[letter_indices[i]] == word[i] or letters[letter_indices[i]] not in word:
-					wrong_word_list.add(word)
-	"""
+		for letter in states:
+			allowed_count = 0  # count how many letters it is allowed
+			count = 0  # count how many of the letter word has
+			for char in word:  # count amount of times letter is in word
+				if char == letter:
+					count += 1
+			for state in states.get(letter):  # for each state that that letter has
 
-	for i in range(len(letter_states)):  # for every letter in word
-		if letter_states[i] == 0:  # if letter does not go there
-			heuristic[i][letters[letter_indices[i]]] = 0  # Don't think this actually does anything
-			for word in diction:  # go through every word and add to wrong_word list if word has letter at index
-				if len(states[letters[letter_indices[i]]]) == 1:
-					if letters[letter_indices[i]] in word:
+				if state[1] == -1:  # if state is -1
+					allowed_count += 1  # increase allowed amount
+					if letter == word[state[0]]:  # remove words with that letter in that index
 						wrong_word_list.add(word)
-				elif letters[letter_indices[i]] != word[i]:
+
+				if state[1] == 1:  # if state is 1
+					allowed_count += 1  # increase allowed amount
+					if letter != word[state[0]]:  # remove all words with letter not in that index
+						wrong_word_list.add(word)
+
+				if count < allowed_count: # remove words with not enough recurences of the letter
 					wrong_word_list.add(word)
-		elif letter_states[i] == 1:
-			# heuristic[i][letters[letter_indices[i]]] = 1000  # dont think this actually does anything
-			for word in diction:
-				if letters[letter_indices[i]] != word[i]:
-					wrong_word_list.add(word)
-		else:
-			for word in diction:
-				heuristic[i][letters[letter_indices[i]]] += 5000  # change heuristic values
-				if letters[letter_indices[i]] == word[i] or letters[letter_indices[i]] not in word:
-					wrong_word_list.add(word)
-	# """
-	for word in wrong_word_list:
-		# print("word being removed: " + word)
+
+				if state[1] == 0:  # if state is 0
+					if letter == word[state[0]]:  # remove any word with that letter in that index
+						wrong_word_list.add(word)
+					if count != allowed_count:
+						i = 0
+						wrong_word_list.add(word)
+	# End of for each word loop
+
+	for word in wrong_word_list: # remove words from dictionary
 		diction.remove(word)
 
-	# print(diction)
-	print(heuristic[0])
 	return diction
 
 
@@ -127,11 +121,10 @@ def choose_word(diction, heuristic):
 	best_word = ""
 	best_value = 0
 
+	# Find word with the largest heuristic
 	for word in diction:
 		value = 0
 		for i in range(len(word)):
-			# print(word[i])
-			# print(heuristic[i][word[i]])
 			value += heuristic[i][word[i]]
 		if value > best_value:
 			best_value = value
@@ -182,8 +175,9 @@ class WordleAgent():
 		self.word_length = word_length
 		self.num_guesses = num_guesses
 		self.mode = mode
-		self.heuristic = {}
+		self.heuristic = determine_heuristic(self.dictionary, self.word_length)
 		self.revised_dict = self.dictionary.copy()
+		# self.best_word = choose_word(self.dictionary, self.heuristic)
 
 
 	def AgentFunction(self, percepts):
@@ -206,16 +200,14 @@ class WordleAgent():
 		guess_counter, letter_indexes, letter_states = percepts
 
 		if guess_counter == 0:
-
-			self.heuristic = determine_initial_heuristic(self.dictionary, self.word_length)
-			best_word = choose_word(self.dictionary, self.heuristic)
 			self.revised_dict = self.dictionary.copy()  # reset dictionary
+			self.heuristic = determine_heuristic(self.revised_dict, self.word_length)
+			best_word = choose_word(self.revised_dict, self.heuristic)
+			return best_word
 		else:
 			self.revised_dict = revise_dict(self.revised_dict, letter_indexes, letter_states, self.heuristic, self.letters)
+			self.heuristic = determine_heuristic(self.revised_dict, self.word_length)
 			best_word = choose_word(self.revised_dict, self.heuristic)
+			return best_word
 
-
-		# Currently this agent always returns the first word from the dictionary-probably
-        # a good idea to replace this with a better guess based on your code above.
-        # return self.dictionary[0]
-		return best_word
+		# return self.best_word

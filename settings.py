@@ -7,23 +7,23 @@ __date__ = "July 2022"
 
 game_settings = {
 
-   "agentFile": "my_agent.py", # name of the agent file (replace with my_agent.py when your agent is ready)
+   "agentFile": "my_agent.py",  # name of the agent file (replace with my_agent.py when your agent is ready)
 
    "dictionary": 'english',   # 'english' or  'francais' or 'deutsch' or 'italiano' or 'espanol'
 
    "wordLength": 5,
 
-   "numberOfGuesses": 6, # number of guesses per game
+   "numberOfGuesses": 6,  # number of guesses per game
 
-   "numberOfGames": 100, # total number of games played
+   "numberOfGames": 10000,  # total number of games played
 
-   "mode": 'easy', # 'easy' or 'hard'
+   "mode": 'hard',  # 'easy' or 'hard'
 
-   "repeats": False, # whether the words are allowed to repeat or not
+   "repeats": False,  # whether the words are allowed to repeat or not
 
    "verbose": True,
 
-   "seed": 1   # seed for random choices of words in the game, None for random seed
+   "seed": 0   # seed for random choices of words in the game, None for random seed
 
 }
 
