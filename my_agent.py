@@ -1,19 +1,17 @@
-__author__ = "<your name>"
+__author__ = "<Ariana van Lith>"
 __organization__ = "COSC343/AIML402, University of Otago"
-__email__ = "<your e-mail>"
-
-# first start with a good word - most used letters in alphabet
-# Go a step further and go with most common letters in that row
-# if -1 get rid of any word with that letter in that index, get rid of any word where the letter is not present anywhere
-# Add 500 to every other hueristic that is not currently 0
-# if 0, remove every word with that letter at that index
-# if 1, remove any words that do not have that letter at that index and make letter value 1000
+__email__ = "<vanar987@student.otago.ac.nz>"
 
 import helper
 from collections import Counter
 
 
 def sort_func(e):
+	"""
+	Function that sorts 1's before 0's and any other value first
+	:param e: The value
+	:return: The sorted value
+	"""
 	if e[1] == 1:
 		return 1
 	if e[1] == -1:
@@ -38,8 +36,6 @@ def determine_heuristic(diction, word_length):
 				count[i][word[i]] = 1
 			else:
 				count[i][word[i]] += 1
-
-	# print(count[0])
 	return count
 
 
@@ -57,15 +53,13 @@ def revise_dict(diction, letter_indices, letter_states, heuristic, letters):
 	last_word = helper.letter_indices_to_word(letter_indices, letters)
 
 	# Create a dictionary holding the states and indexes for each letter
+	# {'S': [[index, state][index, state]], 'O':[[index, state]...
 	states = {}
 	for i in range(len(last_word)):
 		if last_word[i] not in states:
 			states[last_word[i]] = list()
 		one_letter = [i, letter_states[i]]
 		states[last_word[i]].append(one_letter)
-
-	# A dictionary that holds a list that holds a dictionary
-	# {'S': [[index, state][index, state]], 'O':[[index, state]...
 
 	# Sort so -1 first then 1 then zero for each letter.
 	for i in states:
@@ -114,10 +108,13 @@ def revise_dict(diction, letter_indices, letter_states, heuristic, letters):
 
 	return diction
 
-
-
-
 def choose_word(diction, heuristic):
+	"""
+	Function that determines the value of a word and returns the highest valued word based off letter frequencies
+	:param diction: A list of all possible words
+	:param heuristic: A dictionray: The values corrosponding to each letter in each index
+	:return: String: The word with the highest value
+	"""
 	best_word = ""
 	best_value = 0
 
@@ -134,18 +131,15 @@ def choose_word(diction, heuristic):
 
 
 class WordleAgent():
-
 	"""
        A class that encapsulates the code dictating the
        behaviour of the Wordle playing agent
-
        ...
-
        Attributes
        ----------
        dictionary : list
            a list of valid words for the game
-       letter : list
+       letters : list
            a list containing valid characters in the game
        word_length : int
            the number of letters per guess word
@@ -201,13 +195,11 @@ class WordleAgent():
 
 		if guess_counter == 0:
 			self.revised_dict = self.dictionary.copy()  # reset dictionary
-			self.heuristic = determine_heuristic(self.revised_dict, self.word_length)
-			best_word = choose_word(self.revised_dict, self.heuristic)
-			return best_word
 		else:
-			self.revised_dict = revise_dict(self.revised_dict, letter_indexes, letter_states, self.heuristic, self.letters)
-			self.heuristic = determine_heuristic(self.revised_dict, self.word_length)
-			best_word = choose_word(self.revised_dict, self.heuristic)
-			return best_word
+			self.revised_dict = revise_dict(self.revised_dict, letter_indexes, letter_states, self.heuristic,
+											self.letters)
 
-		# return self.best_word
+		self.heuristic = determine_heuristic(self.revised_dict, self.word_length)
+		best_word = choose_word(self.revised_dict, self.heuristic)
+		return best_word
+
